@@ -1,6 +1,4 @@
-// @flow
 /* eslint-env browser */
-
 import { useState, useEffect, useMemo } from 'react'
 
 if (!useState) {
@@ -9,6 +7,7 @@ if (!useState) {
   )
 }
 
+import type { Variant, PopupState, CoreState } from './core'
 import {
   initCoreState,
   createPopupState,
@@ -21,10 +20,7 @@ import {
   bindMenu,
   bindPopover,
   bindPopper,
-  type Variant,
-  type PopupState,
 } from './core'
-
 export {
   anchorRef,
   bindTrigger,
@@ -37,18 +33,17 @@ export {
   bindPopper,
 }
 export type { Variant, PopupState }
-
 export function usePopupState({
   parentPopupState,
   popupId,
   variant,
   disableAutoFocus,
-}: {|
-  parentPopupState?: ?PopupState,
-  popupId: ?string,
-  variant: Variant,
-  disableAutoFocus?: ?boolean,
-|}): PopupState {
+}: {
+  parentPopupState?: PopupState | null | undefined
+  popupId: string | null | undefined
+  variant: Variant
+  disableAutoFocus?: boolean | null | undefined
+}): PopupState {
   const [state, setState] = useState(initCoreState)
   useEffect(() => {
     if (!disableAutoFocus && popupId && typeof document === 'object') {
@@ -56,11 +51,11 @@ export function usePopupState({
       if (popup) popup.focus()
     }
   }, [popupId, state.anchorEl])
-
   return useMemo(
     () =>
       createPopupState({
         state,
+        // @ts-expect-error type broken
         setState,
         parentPopupState,
         popupId,

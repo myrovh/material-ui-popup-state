@@ -1,9 +1,7 @@
-// @flow
 /* eslint-env browser */
-
 import * as React from 'react'
 import PropTypes from 'prop-types'
-
+import type { Variant, CoreState, PopupState as InjectedProps } from './core'
 import {
   initCoreState,
   createPopupState,
@@ -16,11 +14,8 @@ import {
   bindMenu,
   bindPopover,
   bindPopper,
-  type Variant,
-  type CoreState,
-  type PopupState as InjectedProps,
 } from './core'
-
+import { usePopupState } from './hooks'
 export {
   anchorRef,
   bindTrigger,
@@ -31,22 +26,19 @@ export {
   bindMenu,
   bindPopover,
   bindPopper,
+  usePopupState,
 }
 export type { Variant, InjectedProps }
-
-export type Props = {|
-  popupId?: string,
-  children: (props: InjectedProps) => ?React.Node,
-  variant: Variant,
-  parentPopupState?: ?InjectedProps,
-  disableAutoFocus?: ?boolean,
-|}
-
-export default class PopupState extends React.Component<Props, CoreState> {
+export type Props = {
+  popupId?: string
+  children: (props: InjectedProps) => React.ReactNode | null | undefined
+  variant: Variant
+  parentPopupState?: InjectedProps | null | undefined
+  disableAutoFocus?: boolean | null | undefined
+}
+export class PopupState extends React.Component<Props, CoreState> {
   state: CoreState = initCoreState
-
   _mounted: boolean = true
-
   static propTypes = {
     /**
      * The render function.
@@ -69,12 +61,14 @@ export default class PopupState extends React.Component<Props, CoreState> {
      * @returns {React.Node} the content to display
      */
     children: PropTypes.func.isRequired,
+
     /**
      * The `id` property to use for the popup.  Will be passed to the render
      * function as `bindPopup.id`, and also used for the `aria-controls` property
      * passed to the trigger component via `bindTrigger`.
      */
     popupId: PropTypes.string,
+
     /**
      * Which type of popup you are controlling.  Use `'popover'` for `Popover`
      * and `Menu`; use `'popper'` for `Popper`s.  Right now this only affects
@@ -82,10 +76,12 @@ export default class PopupState extends React.Component<Props, CoreState> {
      * component.
      */
     variant: PropTypes.oneOf(['popover', 'popper']).isRequired,
+
     /**
      * The popupState of the parent menu (for cascading menus)
      */
     parentPopupState: PropTypes.object,
+
     /**
      * Will focus the popup when it opens unless disableAutoFocus is explicitly false.
      */
@@ -96,14 +92,15 @@ export default class PopupState extends React.Component<Props, CoreState> {
     this._mounted = false
   }
 
-  _setStateIfMounted: (state: $Shape<CoreState>) => void = (
-    state: $Shape<CoreState>
+  _setStateIfMounted: (state: Partial<CoreState>) => void = (
+    state: Partial<CoreState>
   ) => {
-    if (this._mounted) this.setState(state)
+    if (this._mounted) this.setState(state as CoreState)
   }
 
   componentDidUpdate(prevProps: Props, prevState: CoreState) {
     const { popupId, disableAutoFocus } = this.props
+
     if (
       !disableAutoFocus &&
       typeof document === 'object' &&
@@ -116,10 +113,9 @@ export default class PopupState extends React.Component<Props, CoreState> {
     }
   }
 
-  render(): React.Node | null {
+  render(): React.ReactNode | null {
     const { children, popupId, variant, parentPopupState, disableAutoFocus } =
       this.props
-
     const popupState = createPopupState({
       state: this.state,
       setState: this._setStateIfMounted,
@@ -128,7 +124,6 @@ export default class PopupState extends React.Component<Props, CoreState> {
       parentPopupState,
       disableAutoFocus,
     })
-
     const result = children(popupState)
     if (result == null) return null
     return result
